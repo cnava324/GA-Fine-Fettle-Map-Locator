@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fine Fettle Brands — Find Us in Georgia</title>
+
+<!-- Leaflet (no API key required, OpenStreetMap tiles) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@500;600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div id="ff-locator-root" class="ff-locator">
+
+  <header class="ff-header">
+    <p class="ff-eyebrow">Georgia</p>
+    <h1 class="ff-title">Find Near You</h1>
+    <p class="ff-subtitle">Looking for Fine Fettle GA products? Use the locator below to find a retailer near you.</p>
+  </header>
+
+  <form class="ff-search" id="ff-search-form" role="search" aria-label="Search by city, zip, or address">
+    <input
+      type="text"
+      id="ff-search-input"
+      class="ff-search-input"
+      placeholder="Enter your city, zip code, or address"
+      aria-label="Enter your city, zip code, or address"
+      autocomplete="off"
+    />
+    <button type="submit" class="ff-search-btn" id="ff-search-btn">Find Nearest</button>
+    <button type="button" class="ff-search-clear" id="ff-search-clear" style="display:none;">Clear</button>
+  </form>
+  <p class="ff-search-status" id="ff-search-status" aria-live="polite"></p>
+
+  <div class="ff-controls">
+    <div class="ff-filters" role="group" aria-label="Filter locations by type">
+      <button class="ff-filter-btn is-active" data-filter="all">All Locations</button>
+      <button class="ff-filter-btn" data-filter="dispensary">Medical Dispensaries</button>
+      <button class="ff-filter-btn" data-filter="pharmacy">Low-THC Pharmacies</button>
+    </div>
+    <div class="ff-legend">
+      <span class="ff-legend-item"><span class="ff-dot ff-dot-dispensary"></span>Medical Dispensary</span>
+      <span class="ff-legend-item"><span class="ff-dot ff-dot-pharmacy"></span>Low-THC Pharmacy</span>
+      <span class="ff-legend-item"><span class="ff-star ff-star-internal">&#9733;</span>Fine Fettle Store</span>
+    </div>
+  </div>
+
+  <div class="ff-body">
+    <div id="ff-map" class="ff-map" role="application" aria-label="Map of Fine Fettle Brands retail partners in Georgia"></div>
+
+    <div class="ff-list" id="ff-list" aria-label="List of Fine Fettle Brands retail partners in Georgia"></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+
+  /* ============================================================
+     LOCATION DATA
+     Add a new location by copying an object below.
+     - lat/lng: approximate; adjust for pinpoint accuracy if needed
+     - type: "dispensary" or "pharmacy" (low-THC)
+     - owned: true for Fine Fettle's own retail stores — shown with a
+       gold star marker/badge, but still grouped under "Dispensaries"
+     ============================================================ */
+  var FF_LOCATIONS = [
+    {
+      name: "True Bliss — Downtown Atlanta",
+      type: "dispensary",
+      address: "66 Peachtree St NW, Atlanta, GA 30303",
+      lat: 33.7534,
+      lng: -84.3880,
+      website: "https://trueblissga.com/"
+    },
+    {
+      name: "True Bliss — Buckhead",
+      type: "dispensary",
+      address: "1831 Peachtree Road NE, Atlanta, GA 30309",
+      lat: 33.8112,
+      lng: -84.3841,
+      website: "https://trueblissga.com/"
+    },
+    {
+      name: "Tifton Drug Company",
+      type: "pharmacy",
+      address: "602 Love Ave, Tifton, GA 31794",
+      phone: "(229) 396-5552",
+      lat: 31.4508,
+      lng: -83.5065,
+      website: "https://www.tiftondrugco.com/"
+    },
+    {
+      name: "Bonaire Pharmacy",
+      type: "pharmacy",
+      address: "810 Hwy 96, Suite 1800, Warner Robins, GA 31088",
+      phone: "(478) 287-2169",
+      lat: 32.5873,
+      lng: -83.6320,
+      website: "https://bonairepharmacy.com/"
+    },
+    {
+      name: "Fine Fettle — Smyrna",
+      type: "dispensary",
+      owned: true,
+      address: "2110 Paces Ferry Rd SE, Smyrna, GA 30080",
+      phone: "(770) 741-1186",
+      lat: 33.8850,
+      lng: -84.4700,
+      website: "https://www.finefettle.com/locations/georgia/smyrna/"
+    },
+    {
+      name: "Fine Fettle — Decatur",
+      type: "dispensary",
+      owned: true,
+      address: "2615 Lawrenceville Hwy, Decatur, GA 30033",
+      phone: "(770) 599-7884",
+      lat: 33.8100,
+      lng: -84.2340,
+      website: "https://www.finefettle.com/locations/georgia/decatur/"
+    },
+    {
+      name: "Fine Fettle — Athens",
+      type: "dispensary",
+      owned: true,
+      address: "3035 Atlanta Hwy, Athens, GA 30606",
+      phone: "(770) 462-4084",
+      lat: 33.9400,
+      lng: -83.4380,
+      website: "https://www.finefettle.com/locations/georgia/athens/"
+    },
+    {
+      name: "Fine Fettle — Evans",
+      type: "dispensary",
+      owned: true,
+      address: "4300 Towne Centre Dr, Evans, GA 30809",
+      phone: "(706) 420-3069",
+      lat: 33.5490,
+      lng: -82.1290,
+      website: "https://www.finefettle.com/"
+    }
+  ];
+
+  var COLORS = {
+    dispensary: "#0F3460",
+    pharmacy: "#502D47",
+    internal: "#FFCD4E",
+    internalStroke: "#CB9200"
+  };
+
+  // Approximate bounding box for the state of Georgia — used as the default
+  // view so the map always opens framed on GA, not a marker-tight crop.
+  var GA_BOUNDS = L.latLngBounds([[30.35, -85.65], [35.05, -80.75]]);
+
+  var map = L.map("ff-map", { scrollWheelZoom: false, zoomControl: true });
+  map.fitBounds(GA_BOUNDS);
+
+  // Esri's World Light Gray Canvas — free, keyless raster tiles with no
+  // watermark restrictions (unlike CARTO's basemaps.cartocdn.com, which now
+  // requires a registered API key even for light traffic).
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16
+  }).addTo(map);
+
+  // Reference layer adds road lines and labels back on top of the base.
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+    attribution: '',
+    maxZoom: 16,
+    pane: "overlayPane"
+  }).addTo(map);
+
+  // Leaflet measures the map container's size at init time. If the widget's
+  // CSS (or the host page's layout) hasn't finished settling yet, it can
+  // measure 0x0 and fall back to a world view. Re-measure and re-fit a beat
+  // later, and again on resize, to guard against that.
+  function refit() {
+    map.invalidateSize();
+    map.fitBounds(GA_BOUNDS);
+  }
+  window.addEventListener("load", refit);
+  setTimeout(refit, 250);
+  window.addEventListener("resize", refit);
+
+  // ------------------------------------------------------------
+  // Darken everything outside Georgia. Pulls Georgia's real state
+  // boundary from a well-known public GeoJSON dataset (the same one
+  // used in Leaflet's own official choropleth tutorial), then draws
+  // a world-covering shape with Georgia's outline cut out of it as
+  // a hole, so only the area outside the state gets shaded.
+  // ------------------------------------------------------------
+  fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json")
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var ga = data.features.find(function (f) {
+        return f.properties && (f.properties.name === "Georgia");
+      });
+      if (!ga) return;
+
+      // Collect Georgia's outer ring(s) as Leaflet [lat,lng] rings.
+      var gaRings = [];
+      var polys = ga.geometry.type === "MultiPolygon" ? ga.geometry.coordinates : [ga.geometry.coordinates];
+      polys.forEach(function (poly) {
+        var outer = poly[0]; // exterior ring only
+        gaRings.push(outer.map(function (pt) { return [pt[1], pt[0]]; }));
+      });
+
+      // A world-covering rectangle with Georgia's ring(s) as holes
+      // darkens everything except the state itself.
+      var worldRing = [[-85, -170], [-85, 170], [85, 170], [85, -170]];
+      var maskLatLngs = [worldRing].concat(gaRings);
+
+      L.polygon(maskLatLngs, {
+        stroke: false,
+        fill: true,
+        fillColor: "#241C1B",
+        fillOpacity: 0.55,
+        interactive: false
+      }).addTo(map);
+
+      // A crisp outline right on Georgia's actual border.
+      L.polygon(gaRings, {
+        fill: false,
+        color: "#F3EFEA",
+        weight: 1.5,
+        opacity: 0.5,
+        interactive: false
+      }).addTo(map);
+    })
+    .catch(function () {
+      // If the boundary data can't be fetched (offline, blocked, etc.),
+      // fail silently — the map still works, just without the mask.
+    });
+
+  function pinIcon(type, owned) {
+    var color = COLORS[type] || COLORS.dispensary;
+
+    if (owned) {
+      // Fine Fettle's own retail stores get a star marker so they still read
+      // as distinct at a glance, even while grouped in with Dispensaries.
+      var starColor = COLORS.internal;
+      var starStroke = COLORS.internalStroke;
+      return L.divIcon({
+        className: "ff-pin-wrap",
+        html: '<svg width="34" height="34" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">' +
+              '<circle cx="17" cy="17" r="15" fill="#fff" stroke="' + starStroke + '" stroke-width="2"/>' +
+              '<path d="M17 5.5l3.09 6.26 6.91 1-5 4.87 1.18 6.87L17 20.9l-6.18 3.6 1.18-6.87-5-4.87 6.91-1z" fill="' + starColor + '" stroke="' + starStroke + '" stroke-width="0.75"/>' +
+              '</svg>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -15]
+      });
+    }
+
+    return L.divIcon({
+      className: "ff-pin-wrap",
+      html: '<svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="' + color + '"/>' +
+            '<circle cx="15" cy="15" r="6" fill="#fff"/>' +
+            '</svg>',
+      iconSize: [30, 40],
+      iconAnchor: [15, 40],
+      popupAnchor: [0, -36]
+    });
+  }
+
+  var markers = [];
+  var activeFilter = "all";
+  var userLoc = null; // { lat, lng, label }
+  var userMarker = null;
+
+  FF_LOCATIONS.forEach(function (loc, idx) {
+    var marker = L.marker([loc.lat, loc.lng], { icon: pinIcon(loc.type, loc.owned) }).addTo(map);
+    var typeLabel = ffTypeLabel(loc.type);
+    var popupHtml = '<div class="ff-popup">' +
+      '<p class="ff-popup-type">' + typeLabel + (loc.owned ? ' &middot; Fine Fettle Store' : '') + '</p>' +
+      '<p class="ff-popup-name">' + loc.name + '</p>' +
+      '<p class="ff-popup-address">' + loc.address + '</p>' +
+      '<a class="ff-popup-link" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(loc.address) + '">Get Directions</a>' +
+      '</div>';
+    marker.bindPopup(popupHtml);
+    marker.ffType = loc.type;
+    marker.ffIndex = idx;
+    markers.push(marker);
+  });
+
+  function ffTypeLabel(type) {
+    if (type === "dispensary") return "Medical Dispensary";
+    if (type === "pharmacy") return "Low-THC Pharmacy";
+    return "";
+  }
+
+  // Great-circle distance in miles between two lat/lng points.
+  function milesBetween(lat1, lng1, lat2, lng2) {
+    var R = 3958.8;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function renderList(filter) {
+    activeFilter = filter;
+    var listEl = document.getElementById("ff-list");
+    listEl.innerHTML = "";
+
+    var entries = FF_LOCATIONS
+      .map(function (loc, idx) { return { loc: loc, idx: idx }; })
+      .filter(function (e) { return filter === "all" || e.loc.type === filter; });
+
+    if (userLoc) {
+      // Search is active — sort strictly by distance from the entered location.
+      entries.forEach(function (e) {
+        e.distance = milesBetween(userLoc.lat, userLoc.lng, e.loc.lat, e.loc.lng);
+      });
+      entries.sort(function (a, b) { return a.distance - b.distance; });
+    } else {
+      // Default view — Fine Fettle's own stores sort first.
+      entries.sort(function (a, b) {
+        return (b.loc.owned ? 1 : 0) - (a.loc.owned ? 1 : 0);
+      });
+    }
+
+    entries.forEach(function (entry) {
+      var loc = entry.loc;
+      var idx = entry.idx;
+      var typeLabel = ffTypeLabel(loc.type);
+      var card = document.createElement("div");
+      card.className = "ff-card";
+      card.setAttribute("tabindex", "0");
+      card.innerHTML =
+        '<div class="ff-card-top">' +
+          '<span class="ff-badge ff-badge-' + loc.type + '">' + typeLabel + '</span>' +
+          (loc.owned ? '<span class="ff-badge ff-badge-owned">&#9733; Fine Fettle Store</span>' : '') +
+          (typeof entry.distance === "number" ? '<span class="ff-distance">' + entry.distance.toFixed(1) + ' mi</span>' : '') +
+        '</div>' +
+        '<p class="ff-card-name">' + loc.name + '</p>' +
+        '<p class="ff-card-address">' + loc.address + '</p>' +
+        (loc.phone ? '<p class="ff-card-phone">' + loc.phone + '</p>' : '') +
+        '<div class="ff-card-actions">' +
+          '<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(loc.address) + '" target="_blank" rel="noopener">Directions</a>' +
+          (loc.website ? '<a href="' + loc.website + '" target="_blank" rel="noopener">Website</a>' : '') +
+        '</div>';
+      card.addEventListener("click", function () {
+        map.setView([loc.lat, loc.lng], 15);
+        markers[idx].openPopup();
+      });
+      listEl.appendChild(card);
+    });
+  }
+
+  renderList("all");
+
+  var filterBtns = document.querySelectorAll(".ff-filter-btn");
+  filterBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      filterBtns.forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      var filter = btn.getAttribute("data-filter");
+      renderList(filter);
+      markers.forEach(function (m) {
+        var visible = filter === "all" || m.ffType === filter;
+        var el = m.getElement();
+        if (el) el.style.display = visible ? "" : "none";
+      });
+    });
+  });
+
+  // ------------------------------------------------------------
+  // Location search — geocodes the entered city/zip/address via
+  // OpenStreetMap's free Nominatim service (no API key required),
+  // then sorts the list by distance and drops a marker for the
+  // searched location.
+  // ------------------------------------------------------------
+  var userIcon = L.divIcon({
+    className: "ff-pin-wrap",
+    html: '<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">' +
+          '<circle cx="11" cy="11" r="9" fill="#0F3460" fill-opacity="0.18"/>' +
+          '<circle cx="11" cy="11" r="5" fill="#0F3460" stroke="#fff" stroke-width="2"/>' +
+          '</svg>',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -11]
+  });
+
+  var searchForm = document.getElementById("ff-search-form");
+  var searchInput = document.getElementById("ff-search-input");
+  var searchBtn = document.getElementById("ff-search-btn");
+  var searchClear = document.getElementById("ff-search-clear");
+  var searchStatus = document.getElementById("ff-search-status");
+
+  searchForm.addEventListener("submit", function (evt) {
+    evt.preventDefault();
+    var query = searchInput.value.trim();
+    if (!query) return;
+
+    searchBtn.disabled = true;
+    searchBtn.textContent = "Searching…";
+    searchStatus.textContent = "";
+
+    var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=" +
+      encodeURIComponent(query + ", Georgia, USA");
+
+    fetch(url, { headers: { "Accept": "application/json" } })
+      .then(function (res) { return res.json(); })
+      .then(function (results) {
+        searchBtn.disabled = false;
+        searchBtn.textContent = "Find Nearest";
+
+        if (!results || !results.length) {
+          searchStatus.textContent = "Couldn't find that location — try a nearby city or zip code.";
+          return;
+        }
+
+        var lat = parseFloat(results[0].lat);
+        var lng = parseFloat(results[0].lon);
+        userLoc = { lat: lat, lng: lng, label: query };
+
+        if (userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+        userMarker.bindPopup('<div class="ff-popup"><p class="ff-popup-name">Your location</p></div>');
+
+        renderList(activeFilter);
+
+        // Zoom to fit the searched point and the nearest result together.
+        var nearest = FF_LOCATIONS
+          .filter(function (l) { return activeFilter === "all" || l.type === activeFilter; })
+          .slice()
+          .sort(function (a, b) {
+            return milesBetween(lat, lng, a.lat, a.lng) - milesBetween(lat, lng, b.lat, b.lng);
+          })[0];
+
+        if (nearest) {
+          map.fitBounds(L.latLngBounds([[lat, lng], [nearest.lat, nearest.lng]]).pad(0.5));
+        } else {
+          map.setView([lat, lng], 10);
+        }
+
+        searchStatus.textContent = "Showing distances from \"" + query + "\".";
+        searchClear.style.display = "";
+      })
+      .catch(function () {
+        searchBtn.disabled = false;
+        searchBtn.textContent = "Find Nearest";
+        searchStatus.textContent = "Something went wrong searching that location — please try again.";
+      });
+  });
+
+  searchClear.addEventListener("click", function () {
+    userLoc = null;
+    searchInput.value = "";
+    searchStatus.textContent = "";
+    searchClear.style.display = "none";
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    renderList(activeFilter);
+    refit();
+  });
+
+  // Enable scroll-wheel zoom only once the user has clicked into the map,
+  // so page-scrolling isn't hijacked when the widget is embedded.
+  map.on("click", function () { map.scrollWheelZoom.enable(); });
+
+})();
+</script>
+
+<style>
+  #ff-locator-root, #ff-locator-root * {
+    box-sizing: border-box;
+  }
+  .ff-locator {
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #F3EFEA;
+    background: #4E3E3C;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .ff-header {
+    max-width: 640px;
+    margin-bottom: 22px;
+  }
+  .ff-eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #C9A227;
+    margin: 0 0 8px;
+  }
+  .ff-title {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1.1;
+    margin: 0 0 10px;
+    color: #FFFFFF;
+  }
+  .ff-subtitle {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(243, 239, 234, 0.75);
+    margin: 0;
+  }
+
+  .ff-search {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    max-width: 520px;
+    flex-wrap: wrap;
+  }
+  .ff-search-input {
+    flex: 1;
+    min-width: 200px;
+    font-family: "Public Sans", sans-serif;
+    font-size: 14px;
+    color: #4E3E3C;
+    background: #F8F4EF;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .ff-search-input::placeholder { color: #8A7C77; }
+  .ff-search-btn, .ff-search-clear {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: #F3EFEA;
+  }
+  .ff-search-btn:hover, .ff-search-clear:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  .ff-search-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .ff-search-clear {
+    background: transparent;
+    text-decoration: underline;
+    border-color: transparent;
+  }
+  .ff-search-status {
+    font-size: 12.5px;
+    color: rgba(243, 239, 234, 0.75);
+    margin: 0 0 14px;
+    min-height: 16px;
+  }
+  .ff-distance {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #4E3E3C;
+    background: #EAE2D6;
+    border-radius: 999px;
+    padding: 3px 9px;
+    margin-left: 6px;
+  }
+
+  .ff-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .ff-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ff-filter-btn {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #F3EFEA;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    padding: 9px 18px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .ff-filter-btn:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  .ff-filter-btn.is-active {
+    background: #F3EFEA;
+    border-color: #F3EFEA;
+    color: #4E3E3C;
+  }
+
+  .ff-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: rgba(243, 239, 234, 0.7);
+  }
+  .ff-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ff-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+  }
+  .ff-dot-dispensary { background: #0F3460; }
+  .ff-dot-pharmacy { background: #502D47; }
+  .ff-star {
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+  }
+  .ff-star-internal { color: #FFCD4E; -webkit-text-stroke: 0.5px #CB9200; }
+
+  .ff-body {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+    height: 520px;
+  }
+  .ff-map {
+    order: 2;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  .ff-map .leaflet-tile-pane {
+    filter: saturate(320%) hue-rotate(165deg) brightness(90%) contrast(108%);
+  }
+  .ff-map .leaflet-overlay-pane {
+    filter: brightness(78%) contrast(118%);
+  }
+  .ff-list {
+    order: 1;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+  }
+
+  .ff-card {
+    background: #F8F4EF;
+    border: 1px solid #E5DCD1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .ff-card:hover, .ff-card:focus {
+    border-color: #4E3E3C;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    outline: none;
+  }
+  .ff-card-top {
+    margin-bottom: 6px;
+  }
+  .ff-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    color: #FFFFFF;
+  }
+  .ff-badge-dispensary { background: #0F3460; }
+  .ff-badge-pharmacy { background: #502D47; }
+  .ff-badge-owned {
+    background: transparent;
+    border: 1px solid #CB9200;
+    color: #8A6300;
+    margin-left: 6px;
+  }
+  .ff-card-name {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 17px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    color: #4E3E3C;
+  }
+  .ff-card-address {
+    font-size: 13.5px;
+    color: #6B5C58;
+    margin: 0 0 2px;
+    line-height: 1.4;
+  }
+  .ff-card-phone {
+    font-size: 13.5px;
+    color: #6B5C58;
+    margin: 0 0 8px;
+  }
+  .ff-card-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .ff-card-actions a {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #4E3E3C;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .ff-card-actions a:hover {
+    border-bottom-color: #4E3E3C;
+  }
+
+  .ff-popup { font-family: "Public Sans", sans-serif; min-width: 180px; }
+  .ff-popup-type {
+    font-size: 11px;
+    font-weight: 700;
+    color: #502D47;
+    margin: 0 0 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .ff-popup-name {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 3px;
+    color: #4E3E3C;
+  }
+  .ff-popup-address {
+    font-size: 12.5px;
+    color: #6B5C58;
+    margin: 0 0 6px;
+  }
+  .ff-popup-link {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #4E3E3C;
+  }
+
+  @media (max-width: 768px) {
+    .ff-locator { padding: 18px; border-radius: 10px; }
+    .ff-title { font-size: 26px; }
+    .ff-body {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    .ff-map { order: 1; height: 320px; }
+    .ff-list { order: 2; height: auto; max-height: 420px; }
+  }
+</style>
+
+</body>
+</html>
