@@ -68,19 +68,44 @@ remove-top-spacing items-aligned-undefined"><!-- wp:anchour/column
 {"blockId":"81ba72fd-adb0-4b5a-9bc1-24bf5021d685","breakpoints":{"lg":{"active":true,"settings"
 :{"columns":9}},"xl":{"active":true,"settings":{"columns":7}}}} -->
 <div id="ct-locator" class="wp-block-anchour-column wp-block-column
-wp-block-column__81ba72fd-adb0-4b5a-9bc1-24bf5021d685 lg:w-9/12 xl:w-7/12"><!-- wp:html
+wp-block-column__81ba72fd-adb0-4b5a-9bc1-24bf5021d685 lg:w-9/12 xl:w-7/12"
+style="padding:0 20px;box-sizing:border-box;scroll-margin-top:24px;"><!-- wp:html
 -->
-<div id="askhoodieDiv"></div>
-<script src="https://askhoodie.com/assets/askhoodie.host.js"></script>
-<script>
-document.cookie = hoodieEmbedWtbV2(
-"88511235-c0d1-42f1-8b63-6dd05420ce99","askhoodieDiv",
-document.cookie
-);
-</script>
+<div id="ct-locator-root" class="ff-locator">
+  <header class="ff-header">
+    <p class="ff-eyebrow">Connecticut</p>
+    <h2 class="ff-title">Medical &amp; Recreational Dispensaries</h2>
+    <p class="ff-subtitle">Search or browse Fine Fettle CT retail partners near you.</p>
+  </header>
+  <div id="askhoodieDiv"></div>
+  <script src="https://askhoodie.com/assets/askhoodie.host.js"></script>
+  <script>
+  document.cookie = hoodieEmbedWtbV2(
+  "88511235-c0d1-42f1-8b63-6dd05420ce99","askhoodieDiv",
+  document.cookie
+  );
+  </script>
+</div>
 <!-- /wp:html --></div>
 <!-- /wp:anchour/column --></div>
 <!-- /wp:anchour/columns -->
+
+<!-- wp:html -->
+<div class="ff-section-divider"></div>
+<style>
+  .ff-section-divider {
+    max-width: 1180px;
+    margin: 72px auto;
+    padding: 0 20px;
+  }
+  .ff-section-divider::before {
+    content: "";
+    display: block;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+  }
+</style>
+<!-- /wp:html -->
 
 <!-- wp:anchour/columns
 {"removeTopSpacing":true,"horizontalAlignment":"center","selectedVariationTitle":"One Column"}
@@ -91,7 +116,7 @@ remove-top-spacing items-aligned-undefined"><!-- wp:anchour/column
 :{"columns":9}},"xl":{"active":true,"settings":{"columns":7}}}} -->
 <div id="ga-locator-anchor" class="wp-block-anchour-column wp-block-column
 wp-block-column__6c2f9e14-2b7a-4a3f-9d4e-8e1a5c7b9f02 lg:w-9/12 xl:w-7/12"
-style="scroll-margin-top: 24px;"><!-- wp:html -->
+style="padding:0 20px;box-sizing:border-box;scroll-margin-top: 24px;"><!-- wp:html -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -555,7 +580,7 @@ style="scroll-margin-top: 24px;"><!-- wp:html -->
 </script>
 
 <style>
-  #ff-locator-root, #ff-locator-root * {
+  #ff-locator-root, #ff-locator-root *, #ct-locator-root, #ct-locator-root * {
     box-sizing: border-box;
   }
   .ff-locator {
